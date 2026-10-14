@@ -1,0 +1,72 @@
+{
+	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+	"UUID": "de.tvkopf.whispaste-discord",
+	"Name": "WhisPaste Diktat",
+	"Version": "1.0.0.0",
+	"Author": "Carsten (tvkopf)",
+	"Description": "Diktat-Taste für WhisPaste: zeigt den Diktat-Zustand, startet/stoppt das Diktat und schaltet Discord dabei automatisch stumm.",
+	"Category": "WhisPaste Diktat",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"Icon": "imgs/plugin/marketplace",
+	"CodePath": "bin/plugin.js",
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
+	"Nodejs": {
+		"Version": "20"
+	},
+	"OS": [
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Profiles": [
+		{
+			"Name": "whispaste-diktat",
+			"DeviceType": 0,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": true
+		}
+	],
+	"Actions": [
+		{
+			"Name": "Diktat",
+			"UUID": "de.tvkopf.whispaste-discord.dictate",
+			"Icon": "imgs/actions/dictate/icon",
+			"Tooltip": "Startet/stoppt das WhisPaste-Diktat und mutet Discord während der Aufnahme.",
+			"PropertyInspectorPath": "ui/settings.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/dictate/key",
+					"TitleAlignment": "bottom",
+					"Name": "Bereit"
+				}
+			],
+			"SupportedInMultiActions": false
+		},
+		{
+			"Name": "Status & Diagnose",
+			"UUID": "de.tvkopf.whispaste-discord.status",
+			"Icon": "imgs/actions/status/icon",
+			"Tooltip": "Zeigt den Zustand von WhisPaste und Discord. Druck startet eine Diagnose und repariert die Verbindung.",
+			"PropertyInspectorPath": "ui/settings.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/status/key",
+					"TitleAlignment": "middle",
+					"Name": "Status"
+				}
+			],
+			"SupportedInMultiActions": false
+		}
+	]
+}

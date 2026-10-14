@@ -1,0 +1,17 @@
+# Zeilenenden: Text automatisch normalisieren
+* text=auto
+
+# Windows-Skripte immer mit CRLF ausliefern
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.vbs text eol=crlf
+
+# Shell-Skripte mit LF
+*.sh text eol=lf
+
+# Binärdateien
+*.png binary
+*.jpg binary
+*.ico binary
+*.gguf binary

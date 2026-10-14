@@ -1,0 +1,31 @@
+{
+    "name": "streamdeck-whispaste-sync",
+    "private": true,
+    "type": "module",
+    "description": "Stream Deck Plugin: Diktat-Taste fuer WhisPaste mit automatischem Discord-Mute (Gehirn laeuft im Plugin).",
+    "scripts": {
+        "build": "rollup -c",
+        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart de.tvkopf.whispaste-discord\"",
+        "link": "streamdeck link de.tvkopf.whispaste-discord.sdPlugin",
+        "unlink": "streamdeck unlink de.tvkopf.whispaste-discord",
+        "validate": "streamdeck validate de.tvkopf.whispaste-discord.sdPlugin",
+        "restart": "streamdeck restart de.tvkopf.whispaste-discord",
+        "devmode": "streamdeck dev",
+        "pack": "streamdeck pack de.tvkopf.whispaste-discord.sdPlugin"
+    },
+    "devDependencies": {
+        "@elgato/cli": "^1.10.2",
+        "@rollup/plugin-commonjs": "^28.0.2",
+        "@rollup/plugin-node-resolve": "^16.0.0",
+        "@rollup/plugin-terser": "^0.4.4",
+        "@rollup/plugin-typescript": "^12.1.2",
+        "@tsconfig/node20": "^20.1.4",
+        "@types/node": "^22.13.0",
+        "rollup": "^4.32.1",
+        "tslib": "^2.8.1",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "@elgato/streamdeck": "^3.0.2"
+    }
+}

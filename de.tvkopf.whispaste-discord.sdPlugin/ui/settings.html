@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+		<style>
+			.hint {
+				font-size: 11px;
+				line-height: 1.45;
+				color: #9aa4b2;
+				padding: 2px 12px 10px 12px;
+			}
+			.hint b {
+				color: #d7dee8;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="hint">
+			<b>WhisPaste</b> → Einstellungen → „Local Automation API" aktivieren, dann Port und Token hier eintragen.
+		</div>
+
+		<sdpi-item label="Token">
+			<sdpi-password setting="whispaste.token" global placeholder="Bearer-Token aus WhisPaste"></sdpi-password>
+		</sdpi-item>
+
+		<sdpi-item label="Port">
+			<sdpi-textfield setting="whispaste.port" global default="8765" placeholder="8765"></sdpi-textfield>
+		</sdpi-item>
+
+		<sdpi-item label="Host">
+			<sdpi-textfield setting="whispaste.host" global default="127.0.0.1" placeholder="127.0.0.1"></sdpi-textfield>
+		</sdpi-item>
+
+		<sdpi-item label="Abfrage (ms)">
+			<sdpi-textfield setting="whispaste.pollIntervalMs" global default="250" placeholder="250"></sdpi-textfield>
+		</sdpi-item>
+
+		<div class="hint">
+			<b>Discord</b> → Developer-Portal → New Application → OAuth2 → Redirect <code>http://localhost</code> eintragen,
+			Client-ID und Secret hier eintragen. Beim ersten Start erscheint im Discord ein „Autorisieren"-Dialog.
+		</div>
+
+		<sdpi-item label="Client-ID">
+			<sdpi-textfield setting="discord.clientId" global placeholder="z. B. 1559876496452100158"></sdpi-textfield>
+		</sdpi-item>
+
+		<sdpi-item label="Client-Secret">
+			<sdpi-password setting="discord.clientSecret" global placeholder="Client Secret"></sdpi-password>
+		</sdpi-item>
+
+		<sdpi-item label="Redirect-URI">
+			<sdpi-textfield setting="discord.redirectUri" global default="http://localhost" placeholder="http://localhost"></sdpi-textfield>
+		</sdpi-item>
+
+		<div class="hint">
+			<b>Regeln:</b> Während des Diktats wird Discord gemutet. Danach passiert je nach Modus …<br />
+			„Wiederherstellen" stellt exakt den Zustand von vor dem Diktat wieder her (empfohlen).
+		</div>
+
+		<sdpi-item label="Nach dem Diktat">
+			<sdpi-select setting="rules.mode" global default="restore">
+				<option value="restore">Zustand wiederherstellen</option>
+				<option value="unmute">Immer entmuten</option>
+				<option value="mute">Immer gemutet lassen</option>
+			</sdpi-select>
+		</sdpi-item>
+
+		<sdpi-item label="Nur im Voice-Call">
+			<sdpi-checkbox setting="rules.requireVoiceChannel" global default="true"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Manuelle Mutes respektieren">
+			<sdpi-checkbox setting="rules.respectManualChanges" global default="true"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Start-Toleranz (ms)">
+			<sdpi-textfield setting="rules.startGraceMs" global default="2000" placeholder="2000"></sdpi-textfield>
+		</sdpi-item>
+
+		<sdpi-item label="Prüf-Verzögerung (ms)">
+			<sdpi-textfield setting="rules.verifyDelayMs" global default="900" placeholder="900"></sdpi-textfield>
+		</sdpi-item>
+
+		<div class="hint">
+			<b>Tipp:</b> Die Status-Taste auf dem Deck zeigt WhisPaste/Discord-Zustand und repariert bei Druck die
+			Discord-Verbindung (inkl. Neu-Autorisierung).
+		</div>
+	</body>
+</html>

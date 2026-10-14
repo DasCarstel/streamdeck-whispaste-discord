@@ -1,0 +1,5 @@
+node_modules
+de.tvkopf.whispaste-discord.sdPlugin/bin
+de.tvkopf.whispaste-discord.sdPlugin/logs
+de.tvkopf.whispaste-discord.sdPlugin/discord-token.json
+*.log

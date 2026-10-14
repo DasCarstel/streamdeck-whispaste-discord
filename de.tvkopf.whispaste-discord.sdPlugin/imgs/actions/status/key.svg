@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+	<rect width="72" height="72" rx="11" fill="#101418"/>
+	<rect x="1.5" y="1.5" width="69" height="69" rx="9.5" fill="none" stroke="#4aa3ff" stroke-opacity="0.6" stroke-width="2"/>
+	<text x="36" y="34" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#4aa3ff">STATUS</text>
+	<text x="36" y="52" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#9aa4b2">Druck = Diagnose</text>
+	<text x="36" y="66" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6b7280">-</text>
+</svg>
