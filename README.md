@@ -78,11 +78,42 @@ npm run pack        # erzeugt eine installierbare .streamDeckPlugin-Datei
 
 ### Warum braucht jeder eine eigene Discord-App?
 
-Der Autorisierungs-Code wird bei Discords OAuth2-Token-Endpunkt gegen einen Access-Token
-getauscht — und dafür verlangt Discord das **Client-Secret** des zugehörigen Apps
-(getestet: `401 invalid_client`, wenn man es weglässt). Ein Secret lässt sich nicht sinnvoll
-mit einem Plugin ausliefern, deshalb legt jeder Nutzer eine eigene (private) App an.
-Der Zugriff ist auf die RPC-/Voice-Scopes beschränkt.
+Discords RPC-Flow: `AUTHORIZE` im Discord-Client liefert einen **Code**, der beim
+Token-Endpunkt (`https://discord.com/api/oauth2/token`) gegen einen Access-Token getauscht
+wird — und dieser Austausch verlangt das **Client-Secret** der App.
+
+* **PKCE / „Public Client" ist hier nicht möglich.** Die RPC-`AUTHORIZE`-Anfrage kennt keine
+  `code_challenge`, und ohne die verweigert Discord den Austausch ohne Secret. Selbst
+  getestet: `401 invalid_client`. Andere Projekte bestätigen das unabhängig
+  (Prelive Deck/SoundPad Pro: „Discord's RPC authorization flow needs a real client secret —
+  it has no PKCE support … confirmed by testing").
+* Die Scopes `rpc`, `rpc.voice.read` und `rpc.voice.write` sind laut Discord **„only
+  available to approved partners"**. Discord hat die Freigabe für RPC-Apps seit Jahren
+  eingestellt.
+
+Wie andere Plugins es trotzdem „ohne Einrichtung" schaffen:
+
+| Weg | Beispiel | Für dieses Plugin? |
+|---|---|---|
+| Partner-App (Discord hat die RPC-Scopes freigegeben) | **Elgatos offizielles Discord-Plugin** — Nutzer klicken nur „Authorize" | ❌ diese Freigabe wird nicht mehr vergeben |
+| **Relay-Server** des Herstellers tauscht den Code (Client-ID im Plugin, Secret auf dem Server) | Prelive Deck (SoundPad Pro) | ⚠️ möglich, aber: Hosting, Verfügbarkeit, und der Server sieht die Tokens |
+| **Bring your own App** (Client-ID + Secret im Plugin) | Deckord, fredemmott/StreamDeck-Discord, StreamControllerDiscordPlugin, discord-hushd … | ✅ **unser Weg** |
+| **Eine gemeinsame App + bis zu 50 „App Testers"** | übliche Beta-Verteilung | ✅ für dich und Freunde |
+
+#### Variante „Freunde": eine App, 50 Testplätze
+
+Du musst nicht für jede Person eine eigene App anlegen — für einen kleinen Kreis reicht eine
+gemeinsame App (max. **50 Testplätze**):
+
+1. Im Developer-Portal links **„App Testers"** öffnen und die Discord-Nutzernamen eintragen.
+2. Die Eingeladenen bekommen eine **E-Mail** und müssen die Einladung annehmen — sonst
+   erscheint bei ihnen kein Autorisierungs-Dialog.
+3. Du gibst ihnen **Client-ID + Secret** deiner App; sie tragen beides im Plugin ein und
+   klicken einmal „Autorisieren".
+
+Das Secret wandert dabei zu den Eingeladenen (nur im Freundeskreis sinnvoll, nicht
+veröffentlichen). Für eine öffentliche Verteilung bleibt der Weg über die eigene App —
+oder ein eigener Relay-Dienst (siehe Tabelle).
 
 ## Einstellungen
 
