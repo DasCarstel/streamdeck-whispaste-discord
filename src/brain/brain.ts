@@ -110,7 +110,7 @@ export class Brain extends EventEmitter {
 		log.info(
 			`Einstellungen: WhisPaste ${this.settings.whispaste.host}:${this.settings.whispaste.port} ` +
 				`(Token ${this.settings.whispaste.token ? "gesetzt" : "FEHLT"}), Discord Client-ID ${this.settings.discord.clientId ? "gesetzt" : "FEHLT"}, ` +
-				`Modus ${this.settings.rules.mode}.`,
+				`Modus ${this.settings.rules.mode}, Start-Toleranz ${this.settings.rules.startGraceMs} ms, Pruef-Verzoegerung ${this.settings.rules.verifyDelayMs} ms.`,
 		);
 		for (const problem of settingsProblems(this.settings)) log.warn(problem);
 		await this.rebuild();

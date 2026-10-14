@@ -56,7 +56,8 @@
 
 		<div class="hint">
 			<b>Regeln:</b> Während des Diktats wird Discord gemutet. Danach passiert je nach Modus …<br />
-			„Wiederherstellen" stellt exakt den Zustand von vor dem Diktat wieder her (empfohlen).
+			„Wiederherstellen" stellt exakt den Zustand von vor dem Diktat wieder her (empfohlen).<br />
+			Start-Toleranz und Prüf-Verzögerung: <b>0 = keine künstliche Wartezeit</b> (Standard).
 		</div>
 
 		<sdpi-item label="Nach dem Diktat">
@@ -75,12 +76,12 @@
 			<sdpi-checkbox setting="rules.respectManualChanges" global default="true"></sdpi-checkbox>
 		</sdpi-item>
 
-		<sdpi-item label="Start-Toleranz (ms)">
-			<sdpi-textfield setting="rules.startGraceMs" global default="2000" placeholder="2000"></sdpi-textfield>
+		<sdpi-item label="Start-Toleranz (ms, 0 = aus)">
+			<sdpi-textfield setting="rules.startGraceMs" global default="0" placeholder="0"></sdpi-textfield>
 		</sdpi-item>
 
-		<sdpi-item label="Prüf-Verzögerung (ms)">
-			<sdpi-textfield setting="rules.verifyDelayMs" global default="900" placeholder="900"></sdpi-textfield>
+		<sdpi-item label="Prüf-Verzögerung (ms, 0 = aus)">
+			<sdpi-textfield setting="rules.verifyDelayMs" global default="0" placeholder="0"></sdpi-textfield>
 		</sdpi-item>
 
 		<div class="hint">

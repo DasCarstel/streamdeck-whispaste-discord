@@ -58,8 +58,8 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
 		mode: "restore",
 		requireVoiceChannel: true,
 		respectManualChanges: true,
-		startGraceMs: 2000,
-		verifyDelayMs: 900,
+		startGraceMs: 0,
+		verifyDelayMs: 0,
 	},
 };
 
@@ -111,8 +111,8 @@ export function normalizeSettings(raw: unknown): GlobalSettings {
 			mode: asMode(rules.mode),
 			requireVoiceChannel: asBoolean(rules.requireVoiceChannel, DEFAULT_SETTINGS.rules.requireVoiceChannel),
 			respectManualChanges: asBoolean(rules.respectManualChanges, DEFAULT_SETTINGS.rules.respectManualChanges),
-			startGraceMs: asNumber(rules.startGraceMs, DEFAULT_SETTINGS.rules.startGraceMs, 500, 15000),
-			verifyDelayMs: asNumber(rules.verifyDelayMs, DEFAULT_SETTINGS.rules.verifyDelayMs, 200, 5000),
+			startGraceMs: asNumber(rules.startGraceMs, DEFAULT_SETTINGS.rules.startGraceMs, 0, 15000),
+			verifyDelayMs: asNumber(rules.verifyDelayMs, DEFAULT_SETTINGS.rules.verifyDelayMs, 0, 5000),
 		},
 	};
 }

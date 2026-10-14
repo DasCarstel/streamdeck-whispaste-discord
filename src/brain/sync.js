@@ -33,6 +33,8 @@ class SyncEngine {
         pendingRestore: null,
         startedAt: null,
         pendingStartUntil: 0,
+        sawRecording: false,
+        unconfirmedTicks: 0,
         manualOverride: false,
         lastEndReason: null,
         lastAction: null,
@@ -65,15 +67,35 @@ class SyncEngine {
     const sync = this.state.sync;
     const recording = status.ok && this.state.whispaste.phase === 'recording';
 
+    // Sobald wir die Aufnahme einmal gesehen haben, endet das Diktat SOFORT,
+    // sobald WhisPaste nicht mehr aufnimmt (keine Wartezeit, kein Nachlauf).
+    if (recording) sync.sawRecording = true;
+
     if (sync.active && !recording) {
-      const graceOver = now > sync.pendingStartUntil;
       // Wichtig: Ein einzelner API-Aussetzer darf NICHT als Diktat-Ende gelten —
       // sonst würde mitten in der Aufnahme entmutet. Ein Ende akzeptieren wir nur
       // bei einer gültigen Antwort mit anderer Phase oder nach anhaltendem
       // Ausfall (stopGraceMs).
       const apiGone = !status.ok && now - this.state.whispaste.lastOkAt > this.config.whispaste.stopGraceMs;
-      if ((status.ok && graceOver) || apiGone) {
-        await this.endDictation(apiGone ? 'whispaste-nicht-erreichbar' : `uebergang:${this.state.whispaste.phase || 'unbekannt'}`);
+      const graceMs = Number(this.config.rules.startGraceMs) || 0;
+      let endNow = sync.sawRecording || apiGone;
+
+      if (!endNow && status.ok) {
+        if (graceMs > 0) {
+          endNow = now > sync.pendingStartUntil;
+        } else {
+          // Start-Toleranz 0: Ein noch nicht bestätigter Start gilt als
+          // gescheitert, wenn WhisPaste zweimal hintereinander keine Aufnahme
+          // meldet (z. B. wenn der Trigger nicht gegriffen hat).
+          sync.unconfirmedTicks += 1;
+          endNow = sync.unconfirmedTicks >= 2;
+        }
+      }
+
+      if (endNow) {
+        await this.endDictation(
+          apiGone ? 'whispaste-nicht-erreichbar' : `uebergang:${this.state.whispaste.phase || 'unbekannt'}`
+        );
       }
     } else if (!sync.active && recording) {
       await this.beginDictation('phase:recording');
@@ -99,7 +121,9 @@ class SyncEngine {
 
     sync.active = true;
     sync.startedAt = Date.now();
-    sync.pendingStartUntil = Date.now() + this.config.rules.startGraceMs;
+    sync.pendingStartUntil = Date.now() + (Number(this.config.rules.startGraceMs) || 0);
+    sync.sawRecording = false;
+    sync.unconfirmedTicks = 0;
     sync.manualOverride = false;
     sync.preMute = null;
     sync.lastReason = reason;
@@ -230,6 +254,9 @@ class SyncEngine {
       return;
     }
 
+    const verifyDelayMs = Number(this.config.rules.verifyDelayMs) || 0;
+    if (verifyDelayMs <= 0) return; // Pruef-Verzoegerung 0 = Verifizierung aus
+
     const timer = setTimeout(() => {
       if (this.state.discord.mute === target) return;
       if (this._manualChangeAt > this._selfChangeAt) return;
@@ -239,7 +266,7 @@ class SyncEngine {
       }
       this.log.warn(`Discord: mute=${target} hat nicht gegriffen (${why}) — ein weiterer Versuch.`);
       this._setMute(target, `${why}:retry`, attempt + 1);
-    }, this.config.rules.verifyDelayMs);
+    }, verifyDelayMs);
     if (typeof timer.unref === 'function') timer.unref();
   }
 
