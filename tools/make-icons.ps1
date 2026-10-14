@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$imgs = Join-Path $root 'de.tvkopf.whispaste-discord.sdPlugin\imgs\plugin'
+$imgs = Join-Path $root 'io.github.dascarstel.whispaste-discord.sdPlugin\imgs\plugin'
 New-Item -ItemType Directory -Force -Path $imgs | Out-Null
 
 function New-RoundedPath([double]$x, [double]$y, [double]$w, [double]$h, [double]$r) {

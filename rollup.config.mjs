@@ -6,7 +6,7 @@ import path from "node:path";
 import url from "node:url";
 
 const isWatching = !!process.env.ROLLUP_WATCH;
-const sdPlugin = "de.tvkopf.whispaste-discord.sdPlugin";
+const sdPlugin = "io.github.dascarstel.whispaste-discord.sdPlugin";
 
 /**
  * @type {import('rollup').RollupOptions}

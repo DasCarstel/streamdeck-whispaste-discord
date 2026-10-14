@@ -1,9 +1,9 @@
 {
 	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
-	"UUID": "de.tvkopf.whispaste-discord",
+	"UUID": "io.github.dascarstel.whispaste-discord",
 	"Name": "WhisPaste Diktat",
 	"Version": "1.0.0.0",
-	"Author": "Carsten (tvkopf)",
+	"Author": "DasCarstel",
 	"Description": "Diktat-Taste für WhisPaste: zeigt den Diktat-Zustand, startet/stoppt das Diktat und schaltet Discord dabei automatisch stumm.",
 	"Category": "WhisPaste Diktat",
 	"CategoryIcon": "imgs/plugin/category-icon",
@@ -22,19 +22,11 @@
 			"MinimumVersion": "10"
 		}
 	],
-	"Profiles": [
-		{
-			"Name": "whispaste-diktat",
-			"DeviceType": 0,
-			"Readonly": false,
-			"DontAutoSwitchWhenInstalled": true,
-			"AutoInstall": true
-		}
-	],
+	"Profiles": [],
 	"Actions": [
 		{
 			"Name": "Diktat",
-			"UUID": "de.tvkopf.whispaste-discord.dictate",
+			"UUID": "io.github.dascarstel.whispaste-discord.dictate",
 			"Icon": "imgs/actions/dictate/icon",
 			"Tooltip": "Startet/stoppt das WhisPaste-Diktat und mutet Discord während der Aufnahme.",
 			"PropertyInspectorPath": "ui/settings.html",
@@ -52,7 +44,7 @@
 		},
 		{
 			"Name": "Status & Diagnose",
-			"UUID": "de.tvkopf.whispaste-discord.status",
+			"UUID": "io.github.dascarstel.whispaste-discord.status",
 			"Icon": "imgs/actions/status/icon",
 			"Tooltip": "Zeigt den Zustand von WhisPaste und Discord. Druck startet eine Diagnose und repariert die Verbindung.",
 			"PropertyInspectorPath": "ui/settings.html",

@@ -1,5 +1,7 @@
 node_modules
-de.tvkopf.whispaste-discord.sdPlugin/bin
-de.tvkopf.whispaste-discord.sdPlugin/logs
-de.tvkopf.whispaste-discord.sdPlugin/discord-token.json
+io.github.dascarstel.whispaste-discord.sdPlugin/bin
+io.github.dascarstel.whispaste-discord.sdPlugin/logs
+io.github.dascarstel.whispaste-discord.sdPlugin/discord-token.json
 *.log
+tools/make-profile.py
+tools/place-buttons.py

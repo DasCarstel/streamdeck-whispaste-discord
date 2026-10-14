@@ -5,13 +5,13 @@
     "description": "Stream Deck Plugin: Diktat-Taste fuer WhisPaste mit automatischem Discord-Mute (Gehirn laeuft im Plugin).",
     "scripts": {
         "build": "rollup -c",
-        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart de.tvkopf.whispaste-discord\"",
-        "link": "streamdeck link de.tvkopf.whispaste-discord.sdPlugin",
-        "unlink": "streamdeck unlink de.tvkopf.whispaste-discord",
-        "validate": "streamdeck validate de.tvkopf.whispaste-discord.sdPlugin",
-        "restart": "streamdeck restart de.tvkopf.whispaste-discord",
+        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart io.github.dascarstel.whispaste-discord\"",
+        "link": "streamdeck link io.github.dascarstel.whispaste-discord.sdPlugin",
+        "unlink": "streamdeck unlink io.github.dascarstel.whispaste-discord",
+        "validate": "streamdeck validate io.github.dascarstel.whispaste-discord.sdPlugin",
+        "restart": "streamdeck restart io.github.dascarstel.whispaste-discord",
         "devmode": "streamdeck dev",
-        "pack": "streamdeck pack de.tvkopf.whispaste-discord.sdPlugin"
+        "pack": "streamdeck pack io.github.dascarstel.whispaste-discord.sdPlugin"
     },
     "devDependencies": {
         "@elgato/cli": "^1.10.2",
