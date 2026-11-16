@@ -5,6 +5,7 @@
     "description": "Stream Deck Plugin: Diktat-Taste fuer WhisPaste mit automatischem Discord-Mute (Gehirn laeuft im Plugin).",
     "scripts": {
         "build": "rollup -c",
+        "test": "node --test tests/*.test.mjs",
         "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart io.github.dascarstel.whispaste-discord\"",
         "link": "streamdeck link io.github.dascarstel.whispaste-discord.sdPlugin",
         "unlink": "streamdeck unlink io.github.dascarstel.whispaste-discord",

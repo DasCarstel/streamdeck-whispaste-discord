@@ -276,10 +276,28 @@ class DiscordRpc extends EventEmitter {
     return this.request('GET_VOICE_SETTINGS');
   }
 
+  /**
+   * Partielles Update der Voice-Settings: Nur die übergebenen Felder senden —
+   * Discord wertet SET_VOICE_SETTINGS laut Doku als partielles Update (nur die
+   * übergebenen Felder). Der Client leitet bei deaf=true aber Mute ab bzw. kann
+   * bei einem alleinigen mute-Write den Deafen-Zustand verlieren. Deshalb wird
+   * deaf beim Restore immer explizit mitgesendet — und bei aktivem Full Mute
+   * (deaf=true) gar nicht geschrieben.
+   */
+  setVoiceSettings(settings) {
+    const args = {};
+    if (typeof settings.mute === 'boolean') args.mute = settings.mute;
+    if (typeof settings.deaf === 'boolean') args.deaf = settings.deaf;
+    if (Object.keys(args).length === 0) return Promise.resolve();
+    return this.request('SET_VOICE_SETTINGS', args);
+  }
+
   setMute(mute) {
-    // Nur das Feld "mute" senden — Discord aktualisiert laut Doku ausschließlich
-    // die übergebenen Felder.
-    return this.request('SET_VOICE_SETTINGS', { mute: Boolean(mute) });
+    return this.setVoiceSettings({ mute: Boolean(mute) });
+  }
+
+  setDeaf(deaf) {
+    return this.setVoiceSettings({ deaf: Boolean(deaf) });
   }
 
   getSelectedVoiceChannel() {

@@ -4,10 +4,14 @@
  * SyncEngine — die Regeln.
  *
  * Grundprinzip (bewusst "idempotent" statt "blind togglen"):
- *   • Sobald WhisPaste in die Phase "recording" wechselt: Mute-Zustand merken
- *     und Discord stummschalten (nur wenn wir in einem Voice-Call sind).
+ *   • Sobald WhisPaste in die Phase "recording" wechselt: Mute- und
+ *     Deaf-Zustand merken und Discord stummschalten (nur wenn wir in einem
+ *     Voice-Call sind).
  *   • Sobald die Aufnahme endet (normal, Escape-Abbruch oder Fehler):
- *     exakt den Zustand von vorher wiederherstellen.
+ *     exakt den Zustand von vorher wiederherstellen — inklusive Full Mute
+ *     (deaf). Full Mute schließt "mute" ein, deshalb wird in dem Fall beim
+ *     Start gar nicht in Discord geschrieben (ein mute-Write würde deaf
+ *     löschen).
  *
  * Der Reconciler (tick) läuft zyklisch, gleicht Soll/Ist ab und fängt damit
  * auch verpasste Ereignisse ab. Manuelle Änderungen des Nutzers werden
@@ -30,6 +34,7 @@ class SyncEngine {
       sync: {
         active: false,
         preMute: null,
+        preDeaf: null,
         pendingRestore: null,
         startedAt: null,
         pendingStartUntil: 0,
@@ -104,8 +109,8 @@ class SyncEngine {
     if (sync.pendingRestore !== null && this._discordReady()) {
       const target = sync.pendingRestore;
       sync.pendingRestore = null;
-      this.log.info(`Discord: hole versäumtes Zurücksetzen nach (mute=${target}).`);
-      await this._setMute(target, 'nachgeholt');
+      this.log.info(`Discord: hole versäumtes Zurücksetzen nach (${this._describeVoice(target)}).`);
+      await this._setVoice(target, 'nachgeholt');
     }
 
     if (this.tickCount % this.voiceRefreshEveryTicks === 0) {
@@ -126,6 +131,7 @@ class SyncEngine {
     sync.unconfirmedTicks = 0;
     sync.manualOverride = false;
     sync.preMute = null;
+    sync.preDeaf = null;
     sync.lastReason = reason;
 
     if (!this._discordReady()) {
@@ -138,26 +144,35 @@ class SyncEngine {
     }
 
     let preMute = this.state.discord.mute;
-    if (preMute === null) {
+    let preDeaf = this.state.discord.deaf;
+    if (preMute === null || preDeaf === null) {
       try {
         this.applyVoiceSettings(await this.discord.getVoiceSettings(), 'initial');
         preMute = this.state.discord.mute;
+        preDeaf = this.state.discord.deaf;
       } catch (err) {
-        this.log.debug(`Discord: Mute-Zustand konnte nicht gelesen werden: ${err.message}`);
+        this.log.debug(`Discord: Voice-Zustand konnte nicht gelesen werden: ${err.message}`);
       }
     }
     sync.preMute = preMute;
+    sync.preDeaf = preDeaf;
 
-    if (preMute === false) {
-      await this._setMute(true, 'diktat-start');
-      sync.lastAction = 'muted';
-      this.log.info(`▶ Diktat startet (${reason}) → Discord gemutet.`);
+    if (preMute === null) {
+      sync.lastAction = 'unknown-state';
+      this.log.info(`▶ Diktat startet (${reason}) → Voice-Zustand unbekannt, kein Eingriff.`);
+    } else if (preDeaf === true) {
+      // Full Mute (deaf) schließt "mute" ein — ein mute-Write würde deaf
+      // löschen. Deshalb hier bewusst gar nicht in Discord schreiben.
+      sync.lastAction = 'already-muted';
+      this.log.info(`▶ Diktat startet (${reason}) → Discord ist full-mute (deaf), kein Eingriff.`);
     } else if (preMute === true) {
       sync.lastAction = 'already-muted';
       this.log.info(`▶ Diktat startet (${reason}) → Discord war bereits gemutet.`);
     } else {
-      sync.lastAction = 'unknown-state';
-      this.log.info(`▶ Diktat startet (${reason}) → Mute-Zustand unbekannt, kein Eingriff.`);
+      // deaf bleibt unberührt — nur "mute" setzen.
+      await this._setVoice({ mute: true }, 'diktat-start');
+      sync.lastAction = 'muted';
+      this.log.info(`▶ Diktat startet (${reason}) → Discord gemutet.`);
     }
   }
 
@@ -170,7 +185,9 @@ class SyncEngine {
     sync.lastEndReason = reason;
 
     const preMute = sync.preMute;
+    const preDeaf = sync.preDeaf;
     sync.preMute = null;
+    sync.preDeaf = null;
 
     if (sync.manualOverride) {
       sync.lastAction = 'manual-kept';
@@ -185,7 +202,11 @@ class SyncEngine {
     }
 
     const mode = this.config.rules.mode;
-    const target = mode === 'unmute' ? false : mode === 'mute' ? true : preMute;
+    const targetMute = mode === 'unmute' ? false : mode === 'mute' ? true : preMute;
+    const targetDeaf = mode === 'unmute' ? false : typeof preDeaf === 'boolean' ? preDeaf : null;
+
+    const target = { mute: targetMute };
+    if (typeof targetDeaf === 'boolean') target.deaf = targetDeaf;
 
     if (!this._discordReady()) {
       sync.pendingRestore = target;
@@ -194,15 +215,15 @@ class SyncEngine {
       return;
     }
 
-    if (this.state.discord.mute === target) {
-      sync.lastAction = target ? 'muted' : 'unmuted';
-      this.log.info(`⏹ Diktat beendet (${reason}) → Discord bleibt ${target ? 'gemutet' : 'ungemutet'}.`);
+    if (this.state.discord.mute === targetMute && this.state.discord.deaf === targetDeaf) {
+      sync.lastAction = targetMute ? 'muted' : 'unmuted';
+      this.log.info(`⏹ Diktat beendet (${reason}) → Discord bleibt ${this._describeVoice(target)}.`);
       return;
     }
 
-    await this._setMute(target, 'diktat-ende');
-    sync.lastAction = target ? 'muted' : 'unmuted';
-    this.log.info(`⏹ Diktat beendet (${reason}) → Discord wieder ${target ? 'gemutet' : 'ungemutet'}.`);
+    await this._setVoice(target, 'diktat-ende');
+    sync.lastAction = targetMute ? 'muted' : 'unmuted';
+    this.log.info(`⏹ Diktat beendet (${reason}) → Discord wieder ${this._describeVoice(target)}.`);
   }
 
   // ── Discord-Hilfsfunktionen ───────────────────────────────────────────────
@@ -234,7 +255,7 @@ class SyncEngine {
       this.log.debug(`Discord: GET_SELECTED_VOICE_CHANNEL fehlgeschlagen: ${err.message}`);
     }
 
-    if (this.state.discord.mute === null) {
+    if (this.state.discord.mute === null || this.state.discord.deaf === null) {
       try {
         this.applyVoiceSettings(await this.discord.getVoiceSettings(), 'initial');
       } catch (err) {
@@ -243,14 +264,25 @@ class SyncEngine {
     }
   }
 
-  async _setMute(target, why, attempt = 1) {
+  async _setVoice(desired, why, attempt = 1) {
+    const args = {};
+    if (typeof desired.mute === 'boolean') args.mute = desired.mute;
+    if (typeof desired.deaf === 'boolean') args.deaf = desired.deaf;
+    if (Object.keys(args).length === 0) return;
+
     this._selfChangeAt = Date.now();
     try {
-      await this.discord.setMute(target);
-      this.state.discord.mute = target;
-      this.log.debug(`Discord: mute=${target} gesetzt (${why}).`);
+      await this.discord.setVoiceSettings(args);
+      if (typeof args.mute === 'boolean') this.state.discord.mute = args.mute;
+      if (typeof args.deaf === 'boolean') {
+        this.state.discord.deaf = args.deaf;
+        // Full Mute schließt "mute" ein — nur bei deaf=true nachziehen;
+        // bei deaf=false lässt Discord das eigentliche Mute unberührt.
+        if (args.deaf && typeof args.mute !== 'boolean') this.state.discord.mute = true;
+      }
+      this.log.debug(`Discord: ${this._describeVoice(args)} gesetzt (${why}).`);
     } catch (err) {
-      this.log.error(`Discord: mute=${target} konnte nicht gesetzt werden (${why}): ${err.message}`);
+      this.log.error(`Discord: ${this._describeVoice(args)} konnte nicht gesetzt werden (${why}): ${err.message}`);
       return;
     }
 
@@ -258,46 +290,66 @@ class SyncEngine {
     if (verifyDelayMs <= 0) return; // Pruef-Verzoegerung 0 = Verifizierung aus
 
     const timer = setTimeout(() => {
-      if (this.state.discord.mute === target) return;
+      const wrong =
+        (typeof args.mute === 'boolean' && this.state.discord.mute !== args.mute) ||
+        (typeof args.deaf === 'boolean' && this.state.discord.deaf !== args.deaf);
+      if (!wrong) return;
       if (this._manualChangeAt > this._selfChangeAt) return;
       if (attempt >= 2) {
-        this.log.warn(`Discord: mute=${target} greift nicht (${why}).`);
+        this.log.warn(`Discord: ${this._describeVoice(args)} greift nicht (${why}).`);
         return;
       }
-      this.log.warn(`Discord: mute=${target} hat nicht gegriffen (${why}) — ein weiterer Versuch.`);
-      this._setMute(target, `${why}:retry`, attempt + 1);
+      this.log.warn(`Discord: ${this._describeVoice(args)} hat nicht gegriffen (${why}) — ein weiterer Versuch.`);
+      this._setVoice(args, `${why}:retry`, attempt + 1);
     }, verifyDelayMs);
     if (typeof timer.unref === 'function') timer.unref();
   }
 
+  _describeVoice(v) {
+    const parts = [];
+    if (typeof v.mute === 'boolean') parts.push(`mute=${v.mute}`);
+    if (typeof v.deaf === 'boolean') parts.push(`deaf=${v.deaf}`);
+    return parts.length > 0 ? parts.join(', ') : 'unveraendert';
+  }
+
   // ── Ereignisse von außen ──────────────────────────────────────────────────
 
-  applyVoiceSettings(data, source) {
+  async applyVoiceSettings(data, source) {
     if (!data || typeof data !== 'object') return;
 
-    const previous = this.state.discord.mute;
+    const previousMute = this.state.discord.mute;
+    const previousDeaf = this.state.discord.deaf;
+    if (typeof data.mute === 'boolean') this.state.discord.mute = data.mute;
     if (typeof data.deaf === 'boolean') this.state.discord.deaf = data.deaf;
-    if (typeof data.mute !== 'boolean') return;
-
-    this.state.discord.mute = data.mute;
 
     if (source !== 'event') return;
-    if (previous === null || previous === data.mute) return;
+    const muteChanged = typeof data.mute === 'boolean' && previousMute !== null && previousMute !== data.mute;
+    const deafChanged = typeof data.deaf === 'boolean' && previousDeaf !== null && previousDeaf !== data.deaf;
+    if (!muteChanged && !deafChanged) return;
 
     const selfRecent = Date.now() - this._selfChangeAt < 2000;
     if (selfRecent) return;
 
     this._manualChangeAt = Date.now();
     const where = this.state.sync.active ? ' (während des Diktats)' : '';
-    this.log.info(`Discord: Mute extern geändert (${previous === null ? '?' : previous} → ${data.mute})${where}.`);
+    if (muteChanged && deafChanged) {
+      this.log.info(`Discord: Mute/Deaf extern geändert (${previousMute}/${previousDeaf} → ${data.mute}/${data.deaf})${where}.`);
+    } else if (muteChanged) {
+      this.log.info(`Discord: Mute extern geändert (${previousMute} → ${data.mute})${where}.`);
+    } else {
+      this.log.info(`Discord: Deaf extern geändert (${previousDeaf} → ${data.deaf})${where}.`);
+    }
 
     if (!this.state.sync.active) return;
 
     if (this.config.rules.respectManualChanges) {
-      this.state.sync.preMute = data.mute;
+      this.state.sync.preMute = this.state.discord.mute;
+      this.state.sync.preDeaf = this.state.discord.deaf;
       this.state.sync.manualOverride = true;
     } else {
-      this._setMute(true, 'externe-aenderung');
+      const force = { mute: true };
+      if (this.state.discord.deaf === true) force.deaf = true;
+      await this._setVoice(force, 'externe-aenderung');
     }
   }
 
@@ -379,7 +431,7 @@ class SyncEngine {
       await this.endDictation('trigger-fehler');
       return { status: 502, body: { error: 'trigger_failed', detail: result.error } };
     }
-    return { status: 200, body: { action: 'start', preMute: this.state.sync.preMute } };
+    return { status: 200, body: { action: 'start', preMute: this.state.sync.preMute, preDeaf: this.state.sync.preDeaf } };
   }
 }
 
